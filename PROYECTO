@@ -1,0 +1,392 @@
+'PROYECTO ORIGINAL
+Public Class Calculos
+    Dim R As Decimal
+    Dim volumen, masa, presion, temperatura, resultado, rVol, rTemp, rPre, rMasa As Decimal
+    Dim opcionSeleccionada As String
+    Dim unidadResultado As String = ""
+
+    Private Sub Calcular()
+        Try
+
+            lblMensaje.Text = ""
+            ValidarCamposVacios()
+            ConvertirVol()
+            ConvertirMasa()
+            ConvertirTemp()
+            ConvertirPresion()
+
+            If rbVolumen.Checked Then
+                If tbPresion.Text = 0 Then
+                    LimpiarSoloResultado()
+                    Throw New Exception("Para calcular el volumen, la presión debe ser mayor a 0.")
+                End If
+                resultado = (masa * R * temperatura) / presion
+                Resultado_vol()
+            ElseIf rbMasa.Checked Then
+                If tbTemperatura.Text = 0 And cbTemperatura.Text = "K" Then
+                    LimpiarSoloResultado()
+                    Throw New Exception("Para calcular la masa, la temperatura en K debe ser mayor a 0.")
+                End If
+                resultado = (presion * volumen) / (R * temperatura)
+                Resultado_masa()
+            ElseIf rbTemperatura.Checked Then
+                If tbMasa.Text = 0 Then
+                    LimpiarSoloResultado()
+                    Throw New Exception("Para calcular la temperatura, la masa debe ser mayor a 0.")
+                End If
+                resultado = (presion * volumen) / (masa * R)
+                Resultado_Temp()
+            ElseIf rbPresion.Checked Then
+                If tbVolumen.Text = 0 Then
+                    LimpiarSoloResultado()
+                    Throw New Exception("Para calcular la presión, el volumen debe ser mayor a 0.")
+                End If
+                resultado = (masa * R * temperatura) / volumen
+                Resultado_Presion()
+            End If
+        Catch ex As Exception
+            lblMensaje.Text = ex.Message
+        End Try
+    End Sub
+
+    Private Sub btnCalcular_Click(sender As Object, e As EventArgs) Handles btnCalcular.Click
+        Calcular()
+    End Sub
+
+    Private Sub btnLimpiar_Click(sender As Object, e As EventArgs) Handles btnLimpiar.Click
+        LimpiarCampos()
+    End Sub
+
+    Private Sub Calculos_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        ComprobarDatoSeleccionado()
+        ComprobarGasSeleccionado()
+        cbGas.DropDownStyle = ComboBoxStyle.DropDownList
+        cbVolumen.DropDownStyle = ComboBoxStyle.DropDownList
+        cbMasa.DropDownStyle = ComboBoxStyle.DropDownList
+        cbPresion.DropDownStyle = ComboBoxStyle.DropDownList
+        cbTemperatura.DropDownStyle = ComboBoxStyle.DropDownList
+    End Sub
+
+    'Habilita o deshabilita los campos de acuerdo al radio button seleccionado.
+    Private Sub ComprobarDatoSeleccionado()
+        If rbVolumen.Checked Then
+            tbVolumen.Enabled = False
+            tbMasa.Enabled = True
+            tbPresion.Enabled = True
+            tbTemperatura.Enabled = True
+        ElseIf rbMasa.Checked Then
+            tbVolumen.Enabled = True
+            tbMasa.Enabled = False
+            tbPresion.Enabled = True
+            tbTemperatura.Enabled = True
+        ElseIf rbPresion.Checked Then
+            tbVolumen.Enabled = True
+            tbMasa.Enabled = True
+            tbPresion.Enabled = False
+            tbTemperatura.Enabled = True
+        ElseIf rbTemperatura.Checked Then
+            tbVolumen.Enabled = True
+            tbMasa.Enabled = True
+            tbPresion.Enabled = True
+            tbTemperatura.Enabled = False
+        End If
+    End Sub
+
+    Private Sub ComprobarGasSeleccionado()
+        If cbGas.SelectedItem = "Aire" Then
+            R = 0.287
+            lblR.Text = "R = " & R
+        ElseIf cbGas.SelectedItem = "Amoníaco" Then
+            R = 0.488
+            lblR.Text = "R = " & R
+        ElseIf cbGas.SelectedItem = "Dióxido de Carbono (CO2)" Then
+            R = 0.189
+            lblR.Text = "R = " & R
+        End If
+    End Sub
+
+    Private Sub LimpiarCampos()
+        tbMasa.Text = 0
+        tbPresion.Text = 0
+        tbTemperatura.Text = 0
+        tbVolumen.Text = 0
+        lblResultado.Text = ""
+        lblMensaje.Text = ""
+    End Sub
+
+    Private Sub LimpiarSoloResultado()
+        lblResultado.Text = ""
+    End Sub
+
+
+    'PARA LAS CONVERSIONES DE UNIDADES    
+    Private Sub ConvertirVol()
+        If cbVolumen.SelectedItem = "m3" Then
+            volumen = Decimal.Parse(tbVolumen.Text)
+        ElseIf cbVolumen.SelectedItem = "cm3" Then
+            volumen = Decimal.Parse(tbVolumen.Text) / (1 * Math.Pow(10, 6))
+        ElseIf cbVolumen.SelectedItem = "ft3" Then
+            volumen = Decimal.Parse(tbVolumen.Text) / 35.147
+        ElseIf cbVolumen.SelectedItem = "in3" Then
+            volumen = Decimal.Parse(tbVolumen.Text) / 61023.7
+        End If
+    End Sub
+
+    Private Sub ConvertirMasa()
+        If cbMasa.SelectedItem = "Kg" Then
+            masa = Decimal.Parse(tbMasa.Text)
+        ElseIf cbMasa.SelectedItem = "gr" Then
+            masa = Decimal.Parse(tbMasa.Text) / 1000
+        ElseIf cbMasa.SelectedItem = "oz" Then
+            masa = Decimal.Parse(tbMasa.Text) / 35.27
+        ElseIf cbMasa.SelectedItem = "lb" Then
+            masa = Decimal.Parse(tbMasa.Text) / 2.204
+        End If
+    End Sub
+
+    Private Sub ConvertirTemp()
+        If cbTemperatura.SelectedItem = "K" Then
+            If (tbTemperatura.Text.Contains("-")) Then
+                LimpiarSoloResultado()
+                Throw New Exception("La temperatura en Kelvin no puede ser negativa.")
+            End If
+            temperatura = Decimal.Parse(tbTemperatura.Text)
+        ElseIf cbTemperatura.SelectedItem = "C" Then
+            temperatura = Decimal.Parse(tbTemperatura.Text) + 273
+        ElseIf cbTemperatura.SelectedItem = "F" Then
+            temperatura = ((5 / 9) * (Decimal.Parse(tbTemperatura.Text) - 32)) + 273
+        End If
+    End Sub
+
+    Private Sub ConvertirPresion()
+        If cbPresion.SelectedItem = "Kpa" Then
+            presion = Decimal.Parse(tbPresion.Text)
+        ElseIf cbPresion.SelectedItem = "Pascal" Then
+            presion = Decimal.Parse(tbPresion.Text) / 1000
+        ElseIf cbPresion.SelectedItem = "Atmosfera" Then
+            presion = Decimal.Parse(tbPresion.Text) * 101.325
+        ElseIf cbPresion.SelectedItem = "Bar" Then
+            presion = Decimal.Parse(tbPresion.Text) * 100
+        ElseIf cbPresion.SelectedItem = "Psi" Then
+            presion = Decimal.Parse(tbPresion.Text) * 6.89
+        End If
+    End Sub
+
+    Public Sub Validaciones(sender As Object, e As KeyPressEventArgs, permitirNeg As Boolean)
+        Dim txt As TextBox = CType(sender, TextBox)
+
+        ' Permitir control keys (Backspace, Delete, flechas, etc.)
+        If Char.IsControl(e.KeyChar) Then
+            Return
+        End If
+
+        If permitirNeg Then
+            ' Permitir un solo signo negativo al inicio
+            If e.KeyChar = "-"c Then
+                If txt.SelectionStart = 0 AndAlso Not txt.Text.Contains("-") Then
+                    Return
+                Else
+                    e.Handled = True
+                    Return
+                End If
+            End If
+        End If
+
+
+        ' Permitir solo un punto decimal
+        If e.KeyChar = "."c Then
+            If txt.Text.Contains(".") Then
+                e.Handled = True
+            End If
+            Return
+        End If
+
+        ' Permitir solo números
+        If Not Char.IsDigit(e.KeyChar) Then
+            e.Handled = True
+            Return
+        End If
+
+        ' Validar que no se excedan 4 decimales
+        Dim futureText As String = txt.Text.Insert(txt.SelectionStart, e.KeyChar.ToString())
+        If futureText.Contains(".") Then
+            Dim decimalPart As String = futureText.Split("."c)(1)
+            If decimalPart.Length > 4 Then
+                e.Handled = True
+            End If
+        End If
+    End Sub
+
+    Private Sub tbVolumen_KeyPress(sender As Object, e As KeyPressEventArgs) Handles tbVolumen.KeyPress
+        Validaciones(sender, e, False)
+    End Sub
+
+    Private Sub tbMasa_KeyPress(sender As Object, e As KeyPressEventArgs) Handles tbMasa.KeyPress
+        Validaciones(sender, e, False)
+    End Sub
+
+    Private Sub tbPresion_KeyPress(sender As Object, e As KeyPressEventArgs) Handles tbPresion.KeyPress
+        Validaciones(sender, e, False)
+    End Sub
+
+    Private Sub tbTemperatura_KeyPress(sender As Object, e As KeyPressEventArgs) Handles tbTemperatura.KeyPress
+        Validaciones(sender, e, True)
+    End Sub
+
+    'Radio button y combo box de gas.
+    Private Sub rbVolumen_CheckedChanged(sender As Object, e As EventArgs) Handles rbVolumen.CheckedChanged
+        ComprobarDatoSeleccionado()
+        LimpiarCampos()
+    End Sub
+
+    Private Sub cbVolumen_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbVolumen.SelectedIndexChanged
+        If rbVolumen.Checked Then
+            Resultado_vol()
+        Else
+            Calcular()
+        End If
+    End Sub
+
+    Private Sub cbMasa_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbMasa.SelectedIndexChanged
+        If rbMasa.Checked Then
+            Resultado_masa()
+        Else
+            Calcular()
+        End If
+    End Sub
+
+    Private Sub cbPresion_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbPresion.SelectedIndexChanged
+        If rbPresion.Checked Then
+            Resultado_Presion()
+        Else
+            Calcular()
+        End If
+    End Sub
+
+    Private Sub cbTemperatura_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbTemperatura.SelectedIndexChanged
+        If rbTemperatura.Checked Then
+            Resultado_Temp()
+        Else
+            Calcular()
+        End If
+    End Sub
+
+    Private Sub rbPresion_CheckedChanged(sender As Object, e As EventArgs) Handles rbPresion.CheckedChanged
+        ComprobarDatoSeleccionado()
+        LimpiarCampos()
+    End Sub
+
+    Private Sub btnSalir_Click(sender As Object, e As EventArgs) Handles btnSalir.Click
+        Me.Close()
+    End Sub
+
+    Private Sub rbTemperatura_CheckedChanged(sender As Object, e As EventArgs) Handles rbTemperatura.CheckedChanged
+        ComprobarDatoSeleccionado()
+        LimpiarCampos()
+    End Sub
+
+    Private Sub rbMasa_CheckedChanged(sender As Object, e As EventArgs) Handles rbMasa.CheckedChanged
+        ComprobarDatoSeleccionado()
+        LimpiarCampos()
+    End Sub
+
+    Private Sub cbGas_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbGas.SelectedIndexChanged
+        ComprobarGasSeleccionado()
+        LimpiarSoloResultado()
+    End Sub
+
+    Private Sub ValidarCamposVacios()
+        If String.IsNullOrWhiteSpace(tbVolumen.Text) Then
+            LimpiarSoloResultado()
+            Throw New Exception("El campo volumen no puede estar vacio.")
+        End If
+        If String.IsNullOrWhiteSpace(tbMasa.Text) Then
+            LimpiarSoloResultado()
+            Throw New Exception("El campo masa no puede estar vacio.")
+        End If
+        If String.IsNullOrWhiteSpace(tbPresion.Text) Then
+            LimpiarSoloResultado()
+            Throw New Exception("El campo presión no puede estar vacio.")
+        End If
+        If String.IsNullOrWhiteSpace(tbTemperatura.Text) Then
+            LimpiarSoloResultado()
+            Throw New Exception("El campo temperatura no puede estar vacio.")
+        End If
+    End Sub
+
+    'para la conversion del resultado
+    Private Sub Resultado_vol()
+        If (resultado < 0) Then
+            LimpiarSoloResultado()
+            Throw New Exception("El volumen no puede dar como resultado un valor negativo.")
+        End If
+        If cbVolumen.SelectedItem = "m3" Then
+            lblResultado.Text = Math.Round(resultado, 4) & " " & cbVolumen.Text
+        ElseIf cbVolumen.SelectedItem = "cm3" Then
+            rVol = resultado * (1 * Math.Pow(10, 6))
+            lblResultado.Text = Math.Round(rVol, 4) & " " & cbVolumen.Text
+        ElseIf cbVolumen.SelectedItem = "ft3" Then
+            rVol = resultado * 35.3147
+            lblResultado.Text = Math.Round(rVol, 4) & " " & cbVolumen.Text
+        ElseIf cbVolumen.SelectedItem = "in3" Then
+            rVol = resultado * 61023.7
+            lblResultado.Text = Math.Round(rVol, 4) & " " & cbVolumen.Text
+        End If
+
+    End Sub
+
+    Private Sub Resultado_masa()
+        If (resultado < 0) Then
+            LimpiarSoloResultado()
+            Throw New Exception("La masa no puede dar como resultado un valor negativo.")
+        End If
+        If cbMasa.SelectedItem = "Kg" Then
+            lblResultado.Text = Math.Round(resultado, 4) & " " & cbMasa.Text
+        ElseIf cbMasa.SelectedItem = "gr" Then
+            rMasa = resultado * 1000
+            lblResultado.Text = Math.Round(rMasa, 4) & " " & cbMasa.Text
+        ElseIf cbMasa.SelectedItem = "oz" Then
+            rMasa = resultado * 35.27
+            lblResultado.Text = Math.Round(rMasa, 4) & " " & cbMasa.Text
+        ElseIf cbMasa.SelectedItem = "lb" Then
+            rMasa = resultado * 2.204
+            lblResultado.Text = Math.Round(rMasa, 4) & " " & cbMasa.Text
+        End If
+
+    End Sub
+
+    Private Sub Resultado_Presion()
+        If (resultado < 0) Then
+            LimpiarSoloResultado()
+            Throw New Exception("Para calcular la presión, la temperatura debe ser mayor a -274 C° o -460 F° ")
+        End If
+        If cbPresion.SelectedItem = "Kpa" Then
+            lblResultado.Text = Math.Round(resultado, 4) & " " & cbPresion.Text
+        ElseIf cbPresion.SelectedItem = "Pascal" Then
+            rPre = resultado * 1000
+            lblResultado.Text = Math.Round(rPre, 4) & " " & cbPresion.Text
+        ElseIf cbPresion.SelectedItem = "Atmosfera" Then
+            rPre = resultado / 101.325
+            lblResultado.Text = Math.Round(rPre, 4) & " " & cbPresion.Text
+        ElseIf cbPresion.SelectedItem = "Bar" Then
+            rPre = resultado / 100
+            lblResultado.Text = Math.Round(rPre, 4) & " " & cbPresion.Text
+        ElseIf cbPresion.SelectedItem = "Psi" Then
+            rPre = resultado / 6.89
+            lblResultado.Text = Math.Round(rPre, 4) & " " & cbPresion.Text
+        End If
+
+    End Sub
+
+    Private Sub Resultado_Temp()
+        If cbTemperatura.SelectedItem = "K" Then
+            lblResultado.Text = Math.Round(resultado, 4) & " " & cbTemperatura.Text
+        ElseIf cbTemperatura.SelectedItem = "C" Then
+            rTemp = resultado - 273
+            lblResultado.Text = Math.Round(rTemp, 4) & " " & cbTemperatura.Text
+        ElseIf cbTemperatura.SelectedItem = "F" Then
+            rTemp = ((resultado - 273.15) * 1.8) + 32
+            lblResultado.Text = Math.Round(rTemp, 4) & " " & cbTemperatura.Text
+        End If
+    End Sub
+End Class
